@@ -40,8 +40,7 @@ generator = CandidateGenerator(
 # ============================================================
 
 merchant_rules = {
-    "minimum_expected_profit": 100,
-    "minimum_margin": 100,
+    "minimum_margin_percentage": 0.20,
 
     "max_discount": 0.10,
     "max_incentive": 500,
@@ -117,8 +116,9 @@ def run_revenue_pipeline(
         # If it doesn't, temporarily calculate profit
         # using a simple margin assumption.
         price = product_data["price"]
+        cost_price = product_data["cost_price"]
 
-        profit = price * 0.30
+        profit = price - cost_price
 
         # Determine action type
         cart_price = product_lookup[
@@ -132,24 +132,27 @@ def run_revenue_pipeline(
 
         enriched_candidates.append({
 
-            "product_id":
-                product_id,
+    "product_id":
+        product_id,
 
-            "product_name":
-                candidate["product_name"],
+    "product_name":
+        candidate["product_name"],
 
-            "action_type":
-                action_type,
+    "action_type":
+        action_type,
 
-            "acceptance_probability":
-                acceptance_probability,
+    "acceptance_probability":
+        acceptance_probability,
 
-            "profit":
-                profit,
+    "price":
+        price,
 
-            "inventory":
-                candidate["inventory"]
-        })
+    "cost_price":
+        cost_price,
+
+    "inventory":
+        candidate["inventory"]
+})
 
     # --------------------------------------------------------
     # 3. Decision engine

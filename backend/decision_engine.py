@@ -1,8 +1,8 @@
-def calculate_expected_profit(
+def calculate_expected_revenue(
     acceptance_probability,
-    profit
+    price
 ):
-    return acceptance_probability * profit
+    return acceptance_probability * price
 
 
 def choose_best_candidate(
@@ -10,20 +10,15 @@ def choose_best_candidate(
     merchant_rules
 ):
     """
-    Select the best revenue-growth action
+    Select the revenue-growth action
     while respecting merchant rules.
     """
 
     valid_candidates = []
 
-    minimum_expected_profit = merchant_rules.get(
-        "minimum_expected_profit",
-        100
-    )
-
-    minimum_margin = merchant_rules.get(
-        "minimum_margin",
-        100
+    minimum_margin_percentage = merchant_rules.get(
+        "minimum_margin_percentage",
+        0.20
     )
 
     allowed_actions = merchant_rules.get(
@@ -37,6 +32,9 @@ def choose_best_candidate(
 
     for candidate in candidates:
 
+        price = candidate["price"]
+        cost_price = candidate["cost_price"]
+
         # 1. Inventory
         if candidate["inventory"] <= 0:
             continue
@@ -45,23 +43,48 @@ def choose_best_candidate(
         if candidate["action_type"] not in allowed_actions:
             continue
 
-        # 3. Margin
-        if candidate["profit"] < minimum_margin:
+        # 3. Calculate margin percentage
+        if price <= 0:
             continue
 
-        # 4. Expected profit
-        expected_profit = calculate_expected_profit(
-            candidate["acceptance_probability"],
-            candidate["profit"]
+        profit = price - cost_price
+
+        margin_percentage = profit / price
+
+        if margin_percentage < minimum_margin_percentage:
+            continue
+
+        # 4. Validate acceptance probability
+        probability = candidate[
+            "acceptance_probability"
+        ]
+
+        if probability < 0 or probability > 1:
+            continue
+
+        # 5. Expected revenue
+        expected_revenue = calculate_expected_revenue(
+            probability,
+            price
         )
-
-        if expected_profit < minimum_expected_profit:
-            continue
 
         # Candidate passed all rules
         candidate = candidate.copy()
 
-        candidate["expected_profit"] = expected_profit
+        candidate["profit"] = round(
+            profit,
+            2
+        )
+
+        candidate["margin_percentage"] = round(
+            margin_percentage,
+            4
+        )
+
+        candidate["expected_revenue"] = round(
+            expected_revenue,
+            2
+        )
 
         valid_candidates.append(candidate)
 
@@ -81,12 +104,12 @@ def choose_best_candidate(
         }
 
     # --------------------------------------------------------
-    # Select highest expected profit
+    # Select highest expected revenue
     # --------------------------------------------------------
 
     best_candidate = max(
         valid_candidates,
-        key=lambda x: x["expected_profit"]
+        key=lambda x: x["expected_revenue"]
     )
 
     return {
@@ -94,7 +117,7 @@ def choose_best_candidate(
         "candidate": best_candidate,
         "reason": (
             "Selected the candidate with the "
-            "highest expected incremental profit."
+            "highest expected incremental revenue."
         )
     }
 
@@ -112,7 +135,8 @@ if __name__ == "__main__":
             "product_name": "Headphone Case",
             "action_type": "cross_sell",
             "acceptance_probability": 0.70,
-            "profit": 300,
+            "price": 499,
+            "cost_price": 250,
             "inventory": 24
         },
 
@@ -121,15 +145,15 @@ if __name__ == "__main__":
             "product_name": "USB-C Cable",
             "action_type": "cross_sell",
             "acceptance_probability": 0.60,
-            "profit": 120,
+            "price": 299,
+            "cost_price": 150,
             "inventory": 24
         }
     ]
 
     merchant_rules = {
 
-        "minimum_expected_profit": 100,
-        "minimum_margin": 100,
+        "minimum_margin_percentage": 0.20,
 
         "max_discount": 0.10,
         "max_incentive": 500,
