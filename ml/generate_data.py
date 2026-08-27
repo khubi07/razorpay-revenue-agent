@@ -58,6 +58,11 @@ products_df["tags"] = products_df["tags"].apply(lambda x: ",".join(x))
 # Random inventory
 products_df["inventory"] = np.random.randint(10, 150, len(products_df))
 
+# Synthetic cost price
+products_df["cost_price"] = (
+    products_df["price"]
+    * np.random.uniform(0.50, 0.80, len(products_df))
+).round(2)
 
 # ============================================================
 # 2. CUSTOMER PROFILES

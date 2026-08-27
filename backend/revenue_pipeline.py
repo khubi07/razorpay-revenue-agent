@@ -155,14 +155,21 @@ def run_revenue_pipeline(
     # 3. Decision engine
     # --------------------------------------------------------
 
+    
+    print("\n===== ENRICHED CANDIDATES =====")
+
+    for candidate in enriched_candidates:
+        print(candidate)
+
+    print()
+
     decision = choose_best_candidate(
-        enriched_candidates,
-        merchant_rules
-    )
-
+            enriched_candidates,
+            merchant_rules
+        )
+    
     return decision
-
-
+    
 # ============================================================
 # TEST
 # ============================================================

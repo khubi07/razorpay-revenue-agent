@@ -1,31 +1,31 @@
-product_id,name,category,price,tags,inventory
-P001,Wireless Headphones,Audio,2999,"audio,wireless",112
-P002,Headphone Case,Accessories,499,"audio,protection",102
-P003,USB-C Cable,Accessories,299,"cable,charging",24
-P004,Bluetooth Speaker,Audio,2499,"audio,wireless",116
-P005,Laptop,Computers,59999,"computer,work",81
-P006,Wireless Mouse,Accessories,999,"computer,mouse",30
-P007,Laptop Stand,Accessories,1499,"computer,ergonomics",112
-P008,USB-C Hub,Accessories,1999,"computer,connectivity",131
-P009,Mechanical Keyboard,Accessories,3499,"computer,keyboard",84
-P010,Webcam,Accessories,2999,"computer,camera",97
-P011,Smartphone,Mobile,29999,"mobile,electronics",126
-P012,Phone Case,Accessories,799,"mobile,protection",109
-P013,Screen Protector,Accessories,399,"mobile,protection",113
-P014,Power Bank,Accessories,1499,"mobile,charging",140
-P015,Wireless Charger,Accessories,1999,"mobile,charging",62
-P016,Smartwatch,Wearables,6999,"wearable,fitness",11
-P017,Smartwatch Strap,Accessories,799,"wearable,accessory",97
-P018,Fitness Band,Wearables,2999,"wearable,fitness",47
-P019,Running Shoes,Fitness,4999,"fitness,shoes",139
-P020,Yoga Mat,Fitness,1299,"fitness,yoga",30
-P021,Water Bottle,Fitness,699,"fitness,hydration",67
-P022,Coffee Maker,Home,4999,"home,coffee",31
-P023,Coffee Beans,Home,699,"home,coffee",98
-P024,Travel Mug,Home,999,"home,coffee",58
-P025,Backpack,Lifestyle,1999,"travel,bag",68
-P026,Travel Organizer,Lifestyle,799,"travel,organization",24
-P027,Sunglasses,Lifestyle,2499,"fashion,accessory",60
-P028,Desk Lamp,Home,1799,"home,desk",117
-P029,Notebook,Stationery,299,"stationery,writing",64
-P030,Pen Set,Stationery,199,"stationery,writing",73
+product_id,name,category,price,tags,inventory,cost_price
+P001,Wireless Headphones,Audio,2999,"audio,wireless",112,2347.82
+P002,Headphone Case,Accessories,499,"audio,protection",102,357.84
+P003,USB-C Cable,Accessories,299,"cable,charging",24,211.72
+P004,Bluetooth Speaker,Audio,2499,"audio,wireless",116,1631.27
+P005,Laptop,Computers,59999,"computer,work",81,34334.32
+P006,Wireless Mouse,Accessories,999,"computer,mouse",30,687.88
+P007,Laptop Stand,Accessories,1499,"computer,ergonomics",112,802.64
+P008,USB-C Hub,Accessories,1999,"computer,connectivity",131,1049.0
+P009,Mechanical Keyboard,Accessories,3499,"computer,keyboard",84,1854.05
+P010,Webcam,Accessories,2999,"computer,camera",97,1923.26
+P011,Smartphone,Mobile,29999,"mobile,electronics",126,20644.77
+P012,Phone Case,Accessories,799,"mobile,protection",109,527.06
+P013,Screen Protector,Accessories,399,"mobile,protection",113,271.7
+P014,Power Bank,Accessories,1499,"mobile,charging",140,920.41
+P015,Wireless Charger,Accessories,1999,"mobile,charging",62,1150.17
+P016,Smartwatch,Wearables,6999,"wearable,fitness",11,5518.23
+P017,Smartwatch Strap,Accessories,799,"wearable,accessory",97,542.08
+P018,Fitness Band,Wearables,2999,"wearable,fitness",47,1920.6
+P019,Running Shoes,Fitness,4999,"fitness,shoes",139,3542.75
+P020,Yoga Mat,Fitness,1299,"fitness,yoga",30,924.45
+P021,Water Bottle,Fitness,699,"fitness,hydration",67,400.94
+P022,Coffee Maker,Home,4999,"home,coffee",31,3593.59
+P023,Coffee Beans,Home,699,"home,coffee",98,430.54
+P024,Travel Mug,Home,999,"home,coffee",58,682.25
+P025,Backpack,Lifestyle,1999,"travel,bag",68,1207.45
+P026,Travel Organizer,Lifestyle,799,"travel,organization",24,478.37
+P027,Sunglasses,Lifestyle,2499,"fashion,accessory",60,1290.3
+P028,Desk Lamp,Home,1799,"home,desk",117,1243.75
+P029,Notebook,Stationery,299,"stationery,writing",64,223.73
+P030,Pen Set,Stationery,199,"stationery,writing",73,153.15
