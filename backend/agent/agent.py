@@ -194,6 +194,12 @@ You should obtain:
 - merchant rules before making a revenue decision
 
 Never invent missing information.
+Return ONLY valid JSON:
+
+  "action": "cross_sell | upsell | do_nothing",
+  "product_id": "product ID or null",
+  "reason": "short explanation"
+
 """
                 )
             ]
@@ -214,7 +220,30 @@ Never invent missing information.
             model="gemini-3.6-flash",
             contents=contents,
             config=types.GenerateContentConfig(
-                tools=gemini_tools
+                tools=gemini_tools,
+
+                response_mime_type="application/json",
+
+                response_schema=types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "action": types.Schema(
+                            type=types.Type.STRING
+                        ),
+                        "product_id": types.Schema(
+                            type=types.Type.STRING,
+                            nullable=True
+                        ),
+                        "reason": types.Schema(
+                            type=types.Type.STRING
+                        )
+                    },
+                    required=[
+                        "action",
+                        "product_id",
+                        "reason"
+                    ]
+                )
             )
         )
 
