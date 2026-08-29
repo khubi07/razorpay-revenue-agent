@@ -130,7 +130,7 @@ Customer and recommendation data:
         return None
 
     for part in content.parts:
-
+ 
         if part.function_call:
             function_call = part.function_call
 
