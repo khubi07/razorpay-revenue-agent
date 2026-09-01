@@ -339,7 +339,116 @@ Return ONLY valid JSON:
 
             return response.text
 
+def validate_agent_decision(decision, recommendations, merchant_rules):
 
+    # --------------------------------------------------------
+    # 1. Validate action
+    # --------------------------------------------------------
+
+    allowed_actions = merchant_rules.get(
+        "allowed_actions",
+        []
+    )
+
+    action = decision.get("action")
+
+    if action == "do_nothing":
+        return {
+            "valid": True,
+            "decision": decision
+        }
+
+    if action not in allowed_actions:
+        return {
+            "valid": False,
+            "reason": "Action is not allowed by merchant rules."
+        }
+
+    # --------------------------------------------------------
+    # 2. Validate product ID
+    # --------------------------------------------------------
+
+    product_id = decision.get("product_id")
+
+    if not product_id:
+        return {
+            "valid": False,
+            "reason": "Revenue action requires a product_id."
+        }
+
+    # --------------------------------------------------------
+    # 3. Make sure product exists in validated recommendation
+    # --------------------------------------------------------
+
+    recommended_candidate = recommendations.get("candidate")
+
+    if not recommended_candidate:
+        return {
+            "valid": False,
+            "reason": "No validated recommendation exists."
+        }
+
+    if product_id != recommended_candidate.get("product_id"):
+        return {
+            "valid": False,
+            "reason": "LLM selected a product different from the validated recommendation."
+        }
+
+    # --------------------------------------------------------
+    # 4. Validate action type
+    # --------------------------------------------------------
+
+    if action != recommended_candidate.get("action_type"):
+        return {
+            "valid": False,
+            "reason": "LLM action does not match the validated recommendation."
+        }
+
+    # --------------------------------------------------------
+    # 5. Validate inventory
+    # --------------------------------------------------------
+
+    if recommended_candidate.get("inventory", 0) <= 0:
+        return {
+            "valid": False,
+            "reason": "Recommended product is out of stock."
+        }
+
+    # --------------------------------------------------------
+    # 6. Validate margin
+    # --------------------------------------------------------
+
+    price = recommended_candidate.get("price", 0)
+    cost_price = recommended_candidate.get("cost_price", 0)
+
+    if price <= 0:
+        return {
+            "valid": False,
+            "reason": "Invalid product price."
+        }
+
+    profit = price - cost_price
+    margin = profit / price
+
+    minimum_margin = merchant_rules.get(
+        "minimum_margin_percentage",
+        0
+    )
+
+    if margin < minimum_margin:
+        return {
+            "valid": False,
+            "reason": "Product margin is below merchant minimum."
+        }
+
+    # --------------------------------------------------------
+    # Everything passed
+    # --------------------------------------------------------
+
+    return {
+        "valid": True,
+        "decision": decision
+    }
 # ============================================================
 # TEST
 # ============================================================
