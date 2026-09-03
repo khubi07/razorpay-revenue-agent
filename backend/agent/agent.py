@@ -18,6 +18,8 @@ from backend.agent.tools import (
     get_recommendations,
     get_merchant_rules
 )
+from backend.agent.guardrails import validate_decision
+from backend.agent.audit import log_decision
 
 
 # ============================================================
@@ -369,11 +371,22 @@ Return ONLY valid JSON:
         if merchant_rules is None:
             merchant_rules = get_merchant_rules()
 
-        validated_result = validate_agent_decision(
+        validation_result = validate_agent_decision(
             decision=decision,
             recommendations=recommendations,
-            merchant_rules=merchant_rules
+            merchant_rules=merchant_rules,
         )
+
+        log_decision({
+            "customer_id": customer_id,
+            "cart_product_ids": cart_product_ids,
+            "recommendations": recommendations,
+            "merchant_rules": merchant_rules,
+            "agent_decision": decision,
+            "validation": validation_result,
+        })
+
+        return validation_result
 
         print("\n===== VALIDATED AGENT DECISION =====")
         print(json.dumps(validated_result, indent=2))
