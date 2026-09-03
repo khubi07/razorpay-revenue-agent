@@ -32,3 +32,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+uvicorn backend.api:app --reload

@@ -13,7 +13,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
-from tools import (
+from backend.agent.tools import (
     get_customer_context,
     get_recommendations,
     get_merchant_rules
