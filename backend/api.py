@@ -110,3 +110,26 @@ def verify_payment(request: PaymentVerificationRequest):
             status_code=400,
             detail="Payment verification failed",
         )
+
+@app.get("/experiment")
+def experiment():
+    customer_id = "C002"
+    cart_product_ids = ["P001"]
+
+    result = run_agent(
+        customer_id=customer_id,
+        cart_product_ids=cart_product_ids,
+    )
+
+    decision = result.get("decision")
+
+    return {
+        "customer_id": customer_id,
+        "cart_product_ids": cart_product_ids,
+        "agent_decision": decision,
+        "agent_decision_valid": result.get("valid"),
+        "note": (
+            "The ML/rule engine generated and validated the candidate; "
+            "Gemini selected it and explained the decision."
+        ),
+    }
