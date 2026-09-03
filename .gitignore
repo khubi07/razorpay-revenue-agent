@@ -34,5 +34,7 @@ Thumbs.db
 *.temp
 
 uvicorn backend.api:app --reload
+or
+python -m uvicorn backend.api:app --reload
 python -m http.server 5500 --directory frontend
 http://127.0.0.1:5500

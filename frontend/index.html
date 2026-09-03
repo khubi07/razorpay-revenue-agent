@@ -74,6 +74,8 @@
 
   <p id="status"></p>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <script>
     const recommendBtn = document.getElementById("recommendBtn");
     const payBtn = document.getElementById("payBtn");
@@ -132,10 +134,83 @@
       }
     });
 
-    payBtn.addEventListener("click", () => {
-      status.textContent =
-        "Razorpay Test Mode order creation will be connected next.";
-    });
+    payBtn.addEventListener("click", async () => {
+        payBtn.disabled = true;
+        status.textContent = "Creating Razorpay order...";
+
+        try {
+            const response = await fetch(
+            "http://127.0.0.1:8000/create-order",
+            {
+                method: "POST"
+            }
+            );
+
+            const order = await response.json();
+
+            if (!response.ok) {
+            throw new Error(order.detail || "Could not create order");
+            }
+
+            const options = {
+            key: order.key_id,
+            amount: order.amount,
+            currency: order.currency,
+            name: "Razorpay Revenue Agent",
+            description: "Personalized cross-sell: P003",
+            order_id: order.order_id,
+
+            handler: async function (payment) {
+                status.textContent = "Verifying payment...";
+
+                const verifyResponse = await fetch(
+                "http://127.0.0.1:8000/verify-payment",
+                {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payment)
+                }
+                );
+
+                const result = await verifyResponse.json();
+
+                if (!verifyResponse.ok || !result.valid) {
+                throw new Error("Payment verification failed");
+                }
+
+                status.textContent =
+                "Payment successful and verified!";
+            },
+
+            modal: {
+                ondismiss: function () {
+                status.textContent = "Payment cancelled.";
+                payBtn.disabled = false;
+                }
+            },
+
+            theme: {
+                color: "#2563eb"
+            }
+            };
+
+            const razorpay = new Razorpay(options);
+
+            razorpay.on("payment.failed", function (error) {
+            status.textContent =
+                "Payment failed: " + error.error.description;
+            payBtn.disabled = false;
+            });
+
+            razorpay.open();
+
+        } catch (error) {
+            status.textContent = error.message;
+            payBtn.disabled = false;
+        }
+        });
   </script>
 </body>
 </html>
