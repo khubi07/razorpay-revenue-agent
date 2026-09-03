@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from fastapi.middleware.cors import CORSMiddleware
 
 import sys
 from pathlib import Path
@@ -10,7 +10,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.agent.agent import run_agent
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class RecommendationRequest(BaseModel):
     customer_id: str

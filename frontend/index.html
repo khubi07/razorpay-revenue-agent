@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Razorpay Revenue Agent</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f6f7fb;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px #00000012;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    button:disabled {
+      background: #9ca3af;
+    }
+
+    #offer {
+      display: none;
+      border-left: 4px solid #16a34a;
+      padding-left: 16px;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Razorpay Revenue Agent Storefront</h1>
+
+  <div class="card">
+    <h2>Your cart</h2>
+    <p>Product: P001</p>
+    <p>Customer: C002</p>
+
+    <button id="recommendBtn">
+      Get personalized recommendation
+    </button>
+  </div>
+
+  <div class="card" id="offer">
+    <h2>Recommended for you</h2>
+    <p><strong>Product:</strong> <span id="productId"></span></p>
+    <p><strong>Action:</strong> <span id="action"></span></p>
+    <p><strong>Reason:</strong> <span id="reason"></span></p>
+
+    <button id="payBtn" disabled>
+      Pay with Razorpay
+    </button>
+  </div>
+
+  <p id="status"></p>
+
+  <script>
+    const recommendBtn = document.getElementById("recommendBtn");
+    const payBtn = document.getElementById("payBtn");
+    const offer = document.getElementById("offer");
+    const status = document.getElementById("status");
+
+    recommendBtn.addEventListener("click", async () => {
+      status.textContent = "Getting recommendation...";
+      status.className = "";
+      recommendBtn.disabled = true;
+
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/recommend",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              customer_id: "C002",
+              cart_product_ids: ["P001"]
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || data.valid === false) {
+        throw new Error(data.message || "Recommendation failed");
+        }
+
+        const decision = data.decision;
+
+        if (!decision) {
+        throw new Error("No decision returned by API");
+        }
+
+        document.getElementById("productId").textContent =
+        decision.product_id || "Not available";
+
+        document.getElementById("action").textContent =
+        decision.action || "Not available";
+
+        document.getElementById("reason").textContent =
+        decision.reason || "No reason provided";
+
+        offer.style.display = "block";
+        payBtn.disabled = false;
+        status.textContent = "Recommendation generated successfully.";
+      } catch (error) {
+        status.textContent = error.message;
+        status.className = "error";
+      } finally {
+        recommendBtn.disabled = false;
+      }
+    });
+
+    payBtn.addEventListener("click", () => {
+      status.textContent =
+        "Razorpay Test Mode order creation will be connected next.";
+    });
+  </script>
+</body>
+</html>
