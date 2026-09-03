@@ -152,6 +152,9 @@ def run_agent(customer_id, cart_product_ids):
         "cart_product_ids": cart_product_ids
     }
 
+    recommendations = None
+    merchant_rules = None
+
     # --------------------------------------------------------
     # Initial user message
     # --------------------------------------------------------
@@ -195,20 +198,23 @@ You should obtain:
 
 Never invent missing information.
 Return ONLY valid JSON:
-
-  "action": "cross_sell | upsell | do_nothing",
-  "product_id": "product ID or null",
-  "reason": "short explanation"
-
+    {{
+        "action": "cross_sell | upsell | do_nothing",
+        "product_id": "product ID or null",
+        "reason": "short explanation"
+    }}
 """
                 )
             ]
         )
     ]
 
-    # ========================================================
+        # ========================================================
     # AGENT LOOP
     # ========================================================
+
+    recommendations = None
+    merchant_rules = None
 
     while True:
 
@@ -221,9 +227,7 @@ Return ONLY valid JSON:
             contents=contents,
             config=types.GenerateContentConfig(
                 tools=gemini_tools,
-
                 response_mime_type="application/json",
-
                 response_schema=types.Schema(
                     type=types.Type.OBJECT,
                     properties={
@@ -262,82 +266,119 @@ Return ONLY valid JSON:
             return None
 
         # ----------------------------------------------------
-        # Check whether Gemini requested a tool
+        # Check whether Gemini requested tools
         # ----------------------------------------------------
 
-        tool_called = False
+        tool_calls = [
+            part.function_call
+            for part in content.parts
+            if part.function_call
+        ]
 
-        for part in content.parts:
+        if tool_calls:
 
-            if not part.function_call:
-                continue
-
-            tool_called = True
-
-            function_call = part.function_call
-
-            # ------------------------------------------------
-            # Validate function name
-            # ------------------------------------------------
-
-            if not function_call.name:
-                print("Tool call has no function name.")
-                continue
-
-            function_name = function_call.name
-            arguments = function_call.args or {}
-
-            print("\n===== TOOL REQUESTED BY GEMINI =====")
-            print("Tool:", function_name)
-            print("Arguments:", arguments)
-
-            # ------------------------------------------------
-            # Execute Python tool
-            # ------------------------------------------------
-
-            result = execute_tool(
-                function_name,
-                arguments
-            )
-
-            print("\n===== TOOL RESULT =====")
-            print(result)
-
-            # ------------------------------------------------
-            # Add Gemini's function-call message to history
-            # ------------------------------------------------
-
+            # Append Gemini's function-call message exactly once.
             contents.append(content)
 
-            # ------------------------------------------------
-            # Add tool result to conversation
-            # ------------------------------------------------
+            for function_call in tool_calls:
 
-            contents.append(
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_function_response(
-                            name=function_name,
-                            response={
-                                "result": result
-                            }
-                        )
-                    ]
+                if not function_call.name:
+                    print("Tool call has no function name.")
+                    continue
+
+                function_name = function_call.name
+                arguments = dict(function_call.args or {})
+
+                print("\n===== TOOL REQUESTED BY GEMINI =====")
+                print("Tool:", function_name)
+                print("Arguments:", arguments)
+
+                # ------------------------------------------------
+                # Execute Python tool
+                # ------------------------------------------------
+
+                result = execute_tool(
+                    function_name,
+                    arguments
                 )
+
+                if function_name == "get_recommendations":
+                    recommendations = result
+
+                elif function_name == "get_merchant_rules":
+                    merchant_rules = result
+
+                print("\n===== TOOL RESULT =====")
+                print(result)
+
+                # Append the corresponding function response.
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[
+                            types.Part.from_function_response(
+                                name=function_name,
+                                response={
+                                    "result": result
+                                }
+                            )
+                        ]
+                    )
+                )
+
+            # Ask Gemini again after all tool responses.
+            continue
+
+        # ----------------------------------------------------
+        # Final Gemini response
+        # ----------------------------------------------------
+
+        print("\n===== FINAL GEMINI RESPONSE =====")
+
+        final_text = None
+
+        for part in content.parts:
+            if part.text:
+                final_text = part.text
+                break
+
+        if not final_text:
+            print("Gemini returned no final text response.")
+            return None
+
+        print(final_text)
+
+        try:
+            decision = json.loads(final_text)
+
+        except json.JSONDecodeError:
+            print("Gemini returned invalid JSON.")
+            return {
+                "valid": False,
+                "reason": "Gemini returned invalid JSON."
+            }
+
+        # These are fallback calls only. Normally both values
+        # were already collected through Gemini's tool calls.
+        if recommendations is None:
+            recommendations = get_recommendations(
+                customer_id,
+                cart_product_ids
             )
 
-        # ----------------------------------------------------
-        # If Gemini did not request a tool,
-        # we have the final answer.
-        # ----------------------------------------------------
+        if merchant_rules is None:
+            merchant_rules = get_merchant_rules()
 
-        if not tool_called:
+        validated_result = validate_agent_decision(
+            decision=decision,
+            recommendations=recommendations,
+            merchant_rules=merchant_rules
+        )
 
-            print("\n===== FINAL GEMINI RESPONSE =====")
-            print(response.text)
+        print("\n===== VALIDATED AGENT DECISION =====")
+        print(json.dumps(validated_result, indent=2))
 
-            return response.text
+        return validated_result
 
 def validate_agent_decision(decision, recommendations, merchant_rules):
 
@@ -355,7 +396,14 @@ def validate_agent_decision(decision, recommendations, merchant_rules):
     if action == "do_nothing":
         return {
             "valid": True,
-            "decision": decision
+            "decision": {
+                "action": "do_nothing",
+                "product_id": None,
+                "reason": decision.get(
+                    "reason",
+                    "No suitable recommendation was available."
+                )
+            }
         }
 
     if action not in allowed_actions:
