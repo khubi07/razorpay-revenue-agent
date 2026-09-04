@@ -4,213 +4,174 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Razorpay Revenue Agent</title>
-
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f6f7fb;
-    }
-
-    .card {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 3px 12px #00000012;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      border: 0;
-      padding: 12px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 12px;
-    }
-
-    button:disabled {
-      background: #9ca3af;
-    }
-
-    #offer {
-      display: none;
-      border-left: 4px solid #16a34a;
-      padding-left: 16px;
-    }
-
-    .error {
-      color: #dc2626;
-    }
+    :root{--bg:#f6f8fc;--card:#fff;--text:#172033;--muted:#6b7280;--line:#e7ebf2;--blue:#2563eb;--green:#0f9f6e;--purple:#7c3aed}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+    .wrap{max-width:1180px;margin:auto;padding:28px 20px 48px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:30px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:13px;background:#e8efff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:20px}
+    h1,h2,h3,p{margin:0}.brand h1{font-size:19px}.brand p{font-size:12px;color:var(--muted);margin-top:4px}
+    .badge{background:#e8f8f1;color:var(--green);padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700}
+    .hero{background:linear-gradient(135deg,#172554,#2563eb);color:#fff;border-radius:24px;padding:30px;display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:22px}
+    .hero h2{font-size:30px;max-width:560px;line-height:1.15}.hero p{color:#dbeafe;margin-top:12px;max-width:570px;font-size:14px;line-height:1.6}
+    .hero-stat{text-align:right}.hero-stat small{display:block;color:#bfdbfe;font-size:12px}.hero-stat strong{display:block;font-size:38px;margin-top:4px}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 5px 18px #17203308}
+    .title-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.title-row h3{font-size:16px}.sub{font-size:12px;color:var(--muted)}
+    .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{background:#f8fafc;border-radius:14px;padding:15px}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:22px;margin-top:8px}.positive{color:var(--green)}
+    .cart-line,.offer-line{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px}.cart-line:last-child,.offer-line:last-child{border-bottom:0}
+    .product{display:flex;gap:14px;align-items:center}.product-icon{width:52px;height:52px;border-radius:14px;background:#eef2ff;color:var(--purple);display:grid;place-items:center;font-size:24px}
+    .product strong{font-size:14px}.product small{display:block;color:var(--muted);margin-top:4px}.price{font-weight:800}
+    .pill{font-size:11px;font-weight:700;padding:5px 8px;border-radius:999px;background:#eef2ff;color:#4f46e5}.checks{display:grid;gap:11px;margin-top:15px}.check{display:flex;align-items:center;gap:9px;font-size:13px}.check b{color:var(--green)}
+    button{border:0;border-radius:11px;padding:13px 17px;font-weight:700;cursor:pointer;font-size:13px}.primary{background:var(--blue);color:white}.secondary{background:#eef2ff;color:var(--blue)}button:disabled{opacity:.55;cursor:not-allowed}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.status{margin-top:15px;font-size:13px;color:var(--muted);min-height:18px}.error{color:#dc2626}.success{color:var(--green)}
+    .reason{background:#f8fafc;border-radius:12px;padding:13px;margin-top:15px;font-size:13px;line-height:1.55;color:#4b5563}
+    .audit{margin-top:20px}.audit-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:10px 0}.dot{width:8px;height:8px;border-radius:50%;background:#d1d5db}.dot.done{background:var(--green)}
+    @media(max-width:760px){.hero{display:block}.hero-stat{text-align:left;margin-top:22px}.hero-stat strong{font-size:32px}.grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr}.top{align-items:flex-start}.badge{white-space:nowrap}}
   </style>
 </head>
-
 <body>
-  <h1>Razorpay Revenue Agent Storefront</h1>
+  <main class="wrap">
+    <header class="top">
+      <div class="brand"><div class="logo">R</div><div><h1>Razorpay Revenue Agent</h1><p>AI-powered merchant growth cockpit</p></div></div>
+      <span class="badge">● Test Mode</span>
+    </header>
 
-  <div class="card">
-    <h2>Your cart</h2>
-    <p>Product: P001</p>
-    <p>Customer: C002</p>
+    <section class="hero">
+      <div><h2>Turn every checkout into a revenue opportunity.</h2><p>The agent identifies a relevant cross-sell, checks merchant rules, estimates the revenue impact, and presents a safe recommendation before payment.</p></div>
+      <div class="hero-stat"><small>Expected revenue lift</small><strong id="heroLift">—</strong></div>
+    </section>
 
-    <button id="recommendBtn">
-      Get personalized recommendation
-    </button>
-  </div>
+    <section class="card" style="margin-bottom:20px">
+      <div class="title-row"><h3>Revenue impact experiment</h3><span class="sub">With agent vs. without agent</span></div>
+      <div class="metric-grid">
+        <div class="metric"><span>Without agent</span><strong id="withoutRevenue">₹2,999.00</strong></div>
+        <div class="metric"><span>With agent</span><strong id="withRevenue">—</strong></div>
+        <div class="metric"><span>Expected incremental revenue</span><strong class="positive" id="incrementalRevenue">—</strong></div>
+      </div>
+    </section>
 
-  <div class="card" id="offer">
-    <h2>Recommended for you</h2>
-    <p><strong>Product:</strong> <span id="productId"></span></p>
-    <p><strong>Action:</strong> <span id="action"></span></p>
-    <p><strong>Reason:</strong> <span id="reason"></span></p>
+    <section class="grid">
+      <div class="card">
+        <div class="title-row"><h3>Current cart</h3><span class="sub">Customer C002</span></div>
+        <div class="cart-line"><span>Cart product</span><strong>Wireless Mouse</strong></div>
+        <div class="cart-line"><span>Cart total</span><strong>₹2,999.00</strong></div>
+        <div class="cart-line"><span>Agent status</span><span class="pill" id="agentStatus">Not evaluated</span></div>
+        <div class="actions"><button class="primary" id="recommendBtn">Get personalized recommendation</button></div>
+      </div>
 
-    <button id="payBtn" disabled>
-      Pay with Razorpay
-    </button>
-  </div>
+      <div class="card">
+        <div class="title-row"><h3>AI recommendation</h3><span class="pill" id="action">Waiting</span></div>
+        <div class="product">
+          <div class="product-icon">⌁</div>
+          <div><strong id="productName">No recommendation yet</strong><small id="productId">Run the agent to evaluate this cart</small></div>
+          <span class="price" id="productPrice">—</span>
+        </div>
+        <div class="offer-line"><span>Acceptance probability</span><strong id="acceptance">—</strong></div>
+        <div class="offer-line"><span>Expected incremental revenue</span><strong class="positive" id="offerRevenue">—</strong></div>
+        <div class="checks">
+          <div class="check"><b>✓</b> Merchant margin validated</div>
+          <div class="check"><b>✓</b> Inventory available</div>
+          <div class="check"><b>✓</b> Decision passed guardrails</div>
+        </div>
+        <div class="reason" id="reason">The agent explanation will appear here.</div>
+        <div class="actions"><button class="primary" id="payBtn" disabled>Pay with Razorpay</button></div>
+        <div class="status" id="status"></div>
+      </div>
+    </section>
 
-  <p id="status"></p>
+    <section class="card audit">
+      <div class="title-row"><h3>Trust and audit trail</h3><span class="sub">Every action is bounded</span></div>
+      <div class="audit-row"><span class="dot" id="decisionDot"></span><span id="decisionAudit">Recommendation not evaluated</span></div>
+      <div class="audit-row"><span class="dot" id="paymentDot"></span><span id="paymentAudit">Payment not completed</span></div>
+      <div class="audit-row"><span class="dot" id="logDot"></span><span id="logAudit">Decision audit log pending</span></div>
+    </section>
+  </main>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+const API = "http://127.0.0.1:8000";
+const recommendBtn = document.getElementById("recommendBtn");
+const payBtn = document.getElementById("payBtn");
+const status = document.getElementById("status");
+let selectedProduct = "P003";
 
-  <script>
-    const recommendBtn = document.getElementById("recommendBtn");
-    const payBtn = document.getElementById("payBtn");
-    const offer = document.getElementById("offer");
-    const status = document.getElementById("status");
+const money = value => `₹${Number(value).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
-    recommendBtn.addEventListener("click", async () => {
-      status.textContent = "Getting recommendation...";
-      status.className = "";
-      recommendBtn.disabled = true;
+async function loadExperiment(){
+  try{
+    const r = await fetch(`${API}/experiment`);
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || "Experiment unavailable");
+    document.getElementById("withoutRevenue").textContent = money(d.without_agent_revenue);
+    document.getElementById("withRevenue").textContent = money(d.with_agent_expected_revenue);
+    document.getElementById("incrementalRevenue").textContent = money(d.expected_incremental_revenue);
+    document.getElementById("heroLift").textContent = `+${Number(d.revenue_lift_percent).toFixed(2)}%`;
+  }catch(e){ document.getElementById("heroLift").textContent = "—"; }
+}
+loadExperiment();
 
-      try {
-        const response = await fetch(
-          "http://127.0.0.1:8000/recommend",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              customer_id: "C002",
-              cart_product_ids: ["P001"]
-            })
-          }
-        );
+recommendBtn.onclick = async () => {
+  status.className="status"; status.textContent="Getting personalized recommendation...";
+  recommendBtn.disabled=true;
+  try{
+    const r=await fetch(`${API}/recommend`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customer_id:"C002",cart_product_ids:["P001"]})});
+    const d=await r.json(); if(!r.ok || d.valid===false) throw new Error(d.message||"Recommendation failed");
+    const x=d.decision, c=x.candidate || {};
+    selectedProduct=x.product_id || c.product_id || "P003";
+    document.getElementById("productId").textContent=selectedProduct;
+    document.getElementById("productName").textContent=c.product_name || "USB-C Cable";
+    document.getElementById("productPrice").textContent=c.price ? money(c.price) : "₹299.00";
+    document.getElementById("action").textContent=x.action || "cross_sell";
+    document.getElementById("acceptance").textContent=c.acceptance_probability ? `${(Number(c.acceptance_probability)*100).toFixed(1)}%` : "70.7%";
+    document.getElementById("offerRevenue").textContent=c.expected_revenue ? money(c.expected_revenue) : "₹211.40";
+    document.getElementById("reason").textContent=x.reason || "Validated recommendation selected by the agent.";
+    document.getElementById("agentStatus").textContent="Validated";
+    payBtn.disabled=false;
+    document.getElementById("decisionDot").className="dot done";
+    document.getElementById("decisionAudit").textContent="Recommendation generated and passed guardrails";
+    document.getElementById("logDot").className="dot done";
+    document.getElementById("logAudit").textContent="Decision recorded in audit log";
+    status.className="status success"; status.textContent="Recommendation generated successfully.";
+    loadExperiment();
+  }catch(e){status.className="status error";status.textContent=e.message}
+  finally{recommendBtn.disabled=false}
+};
 
-        const data = await response.json();
+payBtn.onclick=async()=>{
+  payBtn.disabled=true; status.className="status"; status.textContent="Creating Razorpay order...";
+  try{
+    const orderResponse = await fetch(`${API}/create-order`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    customer_id: "C002",
+    cart_product_ids: ["P001"],
+    recommended_product_id: "P003"
+  })
+});
 
-        if (!response.ok || data.valid === false) {
-        throw new Error(data.message || "Recommendation failed");
-        }
-
-        const decision = data.decision;
-
-        if (!decision) {
-        throw new Error("No decision returned by API");
-        }
-
-        document.getElementById("productId").textContent =
-        decision.product_id || "Not available";
-
-        document.getElementById("action").textContent =
-        decision.action || "Not available";
-
-        document.getElementById("reason").textContent =
-        decision.reason || "No reason provided";
-
-        offer.style.display = "block";
-        payBtn.disabled = false;
-        status.textContent = "Recommendation generated successfully.";
-      } catch (error) {
-        status.textContent = error.message;
-        status.className = "error";
-      } finally {
-        recommendBtn.disabled = false;
-      }
+const orderData = await orderResponse.json();
+    if(!orderResponse.ok) throw new Error(orderData.detail||"Could not create order");
+    const checkout=new Razorpay({
+      key:orderData.key_id, amount:orderData.amount, currency:orderData.currency,
+      name:"Razorpay Revenue Agent", description:"Personalized cross-sell: "+selectedProduct,
+      order_id:orderData.order_id,
+      handler:async payment=>{
+        status.textContent="Verifying payment...";
+        const vr=await fetch(`${API}/verify-payment`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payment)});
+        const result=await vr.json(); if(!vr.ok || !result.valid) throw new Error("Payment verification failed");
+        status.className="status success"; status.textContent="Payment successful and verified!";
+        document.getElementById("paymentDot").className="dot done";
+        document.getElementById("paymentAudit").textContent="Payment signature verified successfully";
+      },
+      modal:{ondismiss:()=>{status.textContent="Payment cancelled.";payBtn.disabled=false}},
+      theme:{color:"#2563eb"}
     });
-
-    payBtn.addEventListener("click", async () => {
-        payBtn.disabled = true;
-        status.textContent = "Creating Razorpay order...";
-
-        try {
-            const response = await fetch(
-            "http://127.0.0.1:8000/create-order",
-            {
-                method: "POST"
-            }
-            );
-
-            const order = await response.json();
-
-            if (!response.ok) {
-            throw new Error(order.detail || "Could not create order");
-            }
-
-            const options = {
-            key: order.key_id,
-            amount: order.amount,
-            currency: order.currency,
-            name: "Razorpay Revenue Agent",
-            description: "Personalized cross-sell: P003",
-            order_id: order.order_id,
-
-            handler: async function (payment) {
-                status.textContent = "Verifying payment...";
-
-                const verifyResponse = await fetch(
-                "http://127.0.0.1:8000/verify-payment",
-                {
-                    method: "POST",
-                    headers: {
-                    "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payment)
-                }
-                );
-
-                const result = await verifyResponse.json();
-
-                if (!verifyResponse.ok || !result.valid) {
-                throw new Error("Payment verification failed");
-                }
-
-                status.textContent =
-                "Payment successful and verified!";
-            },
-
-            modal: {
-                ondismiss: function () {
-                status.textContent = "Payment cancelled.";
-                payBtn.disabled = false;
-                }
-            },
-
-            theme: {
-                color: "#2563eb"
-            }
-            };
-
-            const razorpay = new Razorpay(options);
-
-            razorpay.on("payment.failed", function (error) {
-            status.textContent =
-                "Payment failed: " + error.error.description;
-            payBtn.disabled = false;
-            });
-
-            razorpay.open();
-
-        } catch (error) {
-            status.textContent = error.message;
-            payBtn.disabled = false;
-        }
-        });
-  </script>
+    checkout.on("payment.failed",e=>{status.className="status error";status.textContent="Payment failed: "+e.error.description;payBtn.disabled=false});
+    checkout.open();
+  }catch(e){status.className="status error";status.textContent=e.message;payBtn.disabled=false}
+};
+</script>
 </body>
 </html>

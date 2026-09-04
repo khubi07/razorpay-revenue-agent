@@ -35,6 +35,12 @@ class RecommendationRequest(BaseModel):
     cart_product_ids: list[str]
 
 
+class OrderRequest(BaseModel):
+    customer_id: str
+    cart_product_ids: list[str]
+    recommended_product_id: str | None = None
+
+
 @app.get("/")
 def health_check():
     return {
@@ -57,16 +63,39 @@ def recommend(request: RecommendationRequest):
         }
 
 @app.post("/create-order")
-def create_order():
+def create_order(request: OrderRequest):
     try:
+        cart_total = get_cart_revenue(request.cart_product_ids)
+
+        recommendation_total = 0.0
+
+        if request.recommended_product_id:
+            recommendation_result = get_recommendations(
+                customer_id=request.customer_id,
+                cart_product_ids=request.cart_product_ids,
+            )
+
+            candidate = recommendation_result.get("candidate")
+
+            if (
+                candidate
+                and candidate.get("product_id") == request.recommended_product_id
+            ):
+                recommendation_total = float(candidate["price"])
+
+        final_amount = cart_total + recommendation_total
+
         order = razorpay_client.order.create(
             data={
-                "amount": 29900,
+                "amount": int(final_amount * 100),
                 "currency": "INR",
-                "receipt": "p003_cross_sell_001",
+                "receipt": f"{request.customer_id}_revenue_agent",
                 "notes": {
-                    "product_id": "P003",
-                    "customer_id": "C002",
+                    "customer_id": request.customer_id,
+                    "cart_product_ids": ",".join(request.cart_product_ids),
+                    "recommended_product_id": (
+                        request.recommended_product_id or ""
+                    ),
                     "source": "revenue_agent",
                 },
             }
@@ -77,13 +106,13 @@ def create_order():
             "amount": order["amount"],
             "currency": order["currency"],
             "key_id": os.getenv("RAZORPAY_KEY_ID"),
+            "cart_total": cart_total,
+            "recommendation_total": recommendation_total,
+            "final_total": final_amount,
         }
 
     except Exception as error:
-        raise HTTPException(
-            status_code=500,
-            detail=str(error),
-        )
+        raise HTTPException(status_code=500, detail=str(error))
 
 class PaymentVerificationRequest(BaseModel):
     razorpay_order_id: str
