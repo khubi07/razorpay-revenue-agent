@@ -50,7 +50,11 @@ merchant_rules = {
         "upsell"
     ]
 }
-
+def get_cart_revenue(cart_product_ids):
+    return sum(
+        float(product_lookup[product_id]["price"])
+        for product_id in cart_product_ids
+    )
 
 # ============================================================
 # REVENUE PIPELINE

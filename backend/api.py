@@ -4,11 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from backend.agent.agent import run_agent
+from backend.agent.agent import get_recommendations, run_agent
 import os
 import razorpay
 from dotenv import load_dotenv
 from fastapi import HTTPException
+from backend.revenue_pipeline import get_cart_revenue
 
 app = FastAPI()
 
@@ -116,20 +117,72 @@ def experiment():
     customer_id = "C002"
     cart_product_ids = ["P001"]
 
-    result = run_agent(
+    without_agent_revenue = get_cart_revenue(cart_product_ids)
+
+    agent_result = run_agent(
         customer_id=customer_id,
         cart_product_ids=cart_product_ids,
     )
 
-    decision = result.get("decision")
+    decision = agent_result.get("decision")
+
+    expected_incremental_revenue = 0.0
+
+    if decision:
+        recommendation_result = get_recommendations(
+            customer_id=customer_id,
+            cart_product_ids=cart_product_ids,
+        )
+
+        selected_product_id = decision.get("product_id")
+
+        selected_candidate = recommendation_result.get("candidate")
+
+        if (
+            selected_candidate
+            and selected_candidate.get("product_id") != selected_product_id
+        ):
+            selected_candidate = None
+
+        if selected_candidate:
+            expected_incremental_revenue = (
+                float(selected_candidate["price"])
+                * float(selected_candidate["acceptance_probability"])
+            )
+
+    with_agent_expected_revenue = (
+        without_agent_revenue
+        + expected_incremental_revenue
+    )
+
+    revenue_lift = (
+        with_agent_expected_revenue
+        - without_agent_revenue
+    )
+
+    revenue_lift_percent = (
+        (revenue_lift / without_agent_revenue) * 100
+        if without_agent_revenue > 0
+        else 0
+    )
 
     return {
         "customer_id": customer_id,
         "cart_product_ids": cart_product_ids,
-        "agent_decision": decision,
-        "agent_decision_valid": result.get("valid"),
-        "note": (
-            "The ML/rule engine generated and validated the candidate; "
-            "Gemini selected it and explained the decision."
+        "without_agent_revenue": round(without_agent_revenue, 2),
+        "with_agent_expected_revenue": round(
+            with_agent_expected_revenue,
+            2,
         ),
+        "expected_incremental_revenue": round(
+            expected_incremental_revenue,
+            2,
+        ),
+        "revenue_lift": round(revenue_lift, 2),
+        "revenue_lift_percent": round(
+            revenue_lift_percent,
+            2,
+        ),
+        "agent_decision": decision,
+        "agent_decision_valid": agent_result.get("valid"),
     }

@@ -66,6 +66,7 @@ def get_merchant_rules():
         ]
     }
 
+
 if __name__ == "__main__":
 
     customer_id = "C002"
